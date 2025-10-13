@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TaxMate - Pre-filled Tax Form</title>
+</head>
+<body style="font-family:Arial,sans-serif; background:#f9f9f9; padding:2rem;">
+
+  <h1 style="text-align:center; color:#0052cc; margin-bottom:2rem;">TaxMate - Fill Your Tax Data</h1>
+
+  <form id="taxForm" style="max-width:800px; margin:0 auto; background:white; padding:2rem; border-radius:12px; box-shadow:0 10px 25px rgba(0,0,0,0.1);">
+
+    <!-- Part 1: Personal Info -->
+    <h2 style="color:#001f3f; margin-bottom:1rem;">Part 1: Personal Info</h2>
+    <label>Full Name:<br>
+      <input type="text" name="fullName" value="John Doe" style="width:100%; padding:0.6rem; margin-bottom:1rem; border-radius:6px; border:1px solid #ccc;">
+    </label><br>
+    <label>Age:<br>
+      <input type="number" name="age" value="30" style="width:100%; padding:0.6rem; margin-bottom:1rem; border-radius:6px; border:1px solid #ccc;">
+    </label><br>
+    <label>Residential Status:<br>
+      <select name="residentialStatus" style="width:100%; padding:0.6rem; margin-bottom:1rem; border-radius:6px; border:1px solid #ccc;">
+        <option value="Resident" selected>Resident</option>
+        <option value="NRI">NRI</option>
+        <option value="RNOR">RNOR</option>
+      </select>
+    </label><br>
+    <label>Tax Regime:<br>
+      <select name="taxRegime" style="width:100%; padding:0.6rem; margin-bottom:2rem; border-radius:6px; border:1px solid #ccc;">
+        <option value="Old" selected>Old</option>
+        <option value="New">New</option>
+      </select>
+    </label>
+
+    <!-- Part 2: Income -->
+    <h2 style="color:#001f3f; margin-bottom:1rem;">Part 2: Income</h2>
+    <label>Basic Salary:<br>
+      <input type="number" name="income[salary][basic]" value="500000" style="width:100%; padding:0.6rem; margin-bottom:1rem; border-radius:6px; border:1px solid #ccc;">
+    </label><br>
+    <label>HRA:<br>
+      <input type="number" name="income[salary][hra]" value="200000" style="width:100%; padding:0.6rem; margin-bottom:1rem; border-radius:6px; border:1px solid #ccc;">
+    </label><br>
+    <label>Other Allowances:<br>
+      <input type="number" name="income[salary][otherAllowances]" value="50000" style="width:100%; padding:0.6rem; margin-bottom:1rem; border-radius:6px; border:1px solid #ccc;">
+    </label><br>
+    <label>Bonus:<br>
+      <input type="number" name="income[salary][bonus]" value="30000" style="width:100%; padding:0.6rem; margin-bottom:2rem; border-radius:6px; border:1px solid #ccc;">
+    </label>
+
+    <!-- Part 3: Deductions & Taxes -->
+    <h2 style="color:#001f3f; margin-bottom:1rem;">Part 3: Deductions & Prepaid Taxes</h2>
+    <label>80C Deduction:<br>
+      <input type="number" name="deductions[section80C]" value="150000" style="width:100%; padding:0.6rem; margin-bottom:1rem; border-radius:6px; border:1px solid #ccc;">
+    </label><br>
+    <label>80D Deduction:<br>
+      <input type="number" name="deductions[section80D]" value="25000" style="width:100%; padding:0.6rem; margin-bottom:1rem; border-radius:6px; border:1px solid #ccc;">
+    </label><br>
+    <label>TDS Already Deducted:<br>
+      <input type="number" name="prepaidTaxes[tdsAlreadyDeducted]" value="50000" style="width:100%; padding:0.6rem; margin-bottom:1rem; border-radius:6px; border:1px solid #ccc;">
+    </label><br>
+    <label>Advance Tax Paid:<br>
+      <input type="number" name="prepaidTaxes[advanceTaxPaid]" value="10000" style="width:100%; padding:0.6rem; margin-bottom:2rem; border-radius:6px; border:1px solid #ccc;">
+    </label>
+
+    <button type="button" id="submitBtn" style="padding:0.8rem 2rem; background:#0052cc; color:white; border:none; border-radius:8px; cursor:pointer;">Submit</button>
+
+  </form>
+<button type="button" id="downloadXmlBtn" style="padding:0.8rem 2rem; background:#00aaff; color:white; border:none; border-radius:8px; cursor:pointer; margin-top:1rem;">
+  Download XML
+</button>
+
+<script>
+  // Submit form data
+  document.getElementById("submitBtn").addEventListener("click", async () => {
+    const form = document.getElementById("taxForm");
+    const formData = new FormData(form);
+    const jsonData = {};
+
+    formData.forEach((value, key) => {
+      const keys = key.match(/[^\[\]]+/g);
+      let current = jsonData;
+      keys.forEach((k, i) => {
+        if (i === keys.length - 1) {
+          current[k] = isNaN(value) ? value : Number(value);
+        } else {
+          if (!current[k]) current[k] = {};
+          current = current[k];
+        }
+      });
+    });
+
+    try {
+      const res = await fetch("http://localhost:3000/api/tax/taxdata", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(jsonData)
+      });
+      const data = await res.json();
+      alert(data.message || "Data submitted!");
+    } catch (err) {
+      console.error(err);
+      alert("Submission failed!");
+    }
+  });
+
+  // Download XML
+  document.getElementById("downloadXmlBtn").addEventListener("click", async () => {
+    try {
+      // Assuming your API returns XML for the last submitted data
+      const res = await fetch("http://localhost:3000/api/tax/generate-xml/68e5aade11f7a8b5c550d348"
+, {
+        method: "GET", // or POST if it requires body
+      });
+      if (!res.ok) throw new Error("Failed to generate XML");
+
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "TaxData.xml";
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+
+      alert("XML downloaded successfully!");
+    } catch (err) {
+      console.error(err);
+      alert(err.message);
+    }
+  });
+</script>
+
+
+</body>
+</html>

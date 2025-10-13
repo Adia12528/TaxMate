@@ -1,0 +1,25 @@
+<?xml version="1.0"?>
+<ITR>
+  <PersonalInfo>
+    <FullName>John Doe</FullName>
+    <Age>30</Age>
+    <ResidentialStatus>Resident</ResidentialStatus>
+    <TaxRegime>Old</TaxRegime>
+  </PersonalInfo>
+  <Income>
+    <salary>
+      <basic>500000</basic>
+      <hra>200000</hra>
+      <otherAllowances>50000</otherAllowances>
+      <bonus>30000</bonus>
+    </salary>
+  </Income>
+  <Deductions>
+    <section80C>150000</section80C>
+    <section80D>25000</section80D>
+  </Deductions>
+  <PrepaidTaxes>
+    <tdsAlreadyDeducted>50000</tdsAlreadyDeducted>
+    <advanceTaxPaid>10000</advanceTaxPaid>
+  </PrepaidTaxes>
+</ITR>
